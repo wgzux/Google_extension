@@ -1,0 +1,197 @@
+/* ====================================
+   Redmine Helper - Content Script CSS
+   ==================================== */
+
+/* ====== ISSUE TREE MODULE ====== */
+
+.rh-tree-toggle {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 10px;
+    margin-right: 4px;
+    color: #666;
+    user-select: none;
+    width: 14px;
+    text-align: center;
+    transition: color 0.2s;
+}
+
+.rh-tree-toggle:hover {
+    color: #e74c3c;
+}
+
+.rh-tree-hidden {
+    display: none !important;
+}
+
+.rh-tree-controls {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 6px;
+}
+
+/* ====== CHUNG: BUTTONS ====== */
+
+.rh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f5f5f5;
+    color: #333;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rh-btn:hover {
+    background: #e8e8e8;
+    border-color: #999;
+}
+
+.rh-btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+}
+
+/* ====== BUG MANAGER MODULE ====== */
+
+/* Bug highlight colors */
+.rh-is-bug {
+    font-weight: 600;
+}
+
+.rh-bug-new {
+    background-color: #fff0f0 !important;
+    border-left: 3px solid #e74c3c !important;
+}
+
+.rh-bug-progress {
+    background-color: #fff8f0 !important;
+    border-left: 3px solid #e67e22 !important;
+}
+
+.rh-bug-resolved {
+    background-color: #f0f8ff !important;
+    border-left: 3px solid #3498db !important;
+}
+
+.rh-bug-verified {
+    background-color: #f0fff0 !important;
+    border-left: 3px solid #27ae60 !important;
+}
+
+.rh-bug-closed {
+    background-color: #f8f8f8 !important;
+    border-left: 3px solid #999 !important;
+    opacity: 0.7;
+}
+
+.rh-bug-closed td.subject a {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* Bug menu */
+.rh-bug-menu {
+    position: fixed;
+    top: 80px;
+    right: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    z-index: 9999;
+    min-width: 200px;
+    font-size: 12px;
+}
+
+.rh-bug-menu-header {
+    background: #e74c3c;
+    color: #fff;
+    padding: 6px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 6px 6px 0 0;
+}
+
+.rh-bug-menu-body {
+    padding: 8px 12px;
+}
+
+.rh-bug-menu-body a {
+    color: #3498db;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.rh-bug-menu-body a:hover {
+    text-decoration: underline;
+    color: #2980b9;
+}
+
+.rh-separator {
+    color: #ccc;
+    margin: 0 4px;
+}
+
+/* Hidden rows */
+.rh-hidden {
+    display: none !important;
+}
+
+/* ====== SPENT TIME MODULE ====== */
+
+.rh-hours-none {
+    background-color: #ffe0e0 !important;
+}
+
+.rh-hours-low {
+    background-color: #fff3cd !important;
+}
+
+.rh-hours-high {
+    background-color: #e8daef !important;
+}
+
+/* ====== REPORT CONTROLS ====== */
+
+.rh-report-controls {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 6px;
+}
+
+/* ====== TOAST NOTIFICATION ====== */
+
+.rh-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 18px;
+    background: #2ecc71;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 99999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.rh-toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.rh-toast-warning {
+    background: #f39c12;
+}
+
+.rh-toast-error {
+    background: #e74c3c;
+}
