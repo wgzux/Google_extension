@@ -26,6 +26,7 @@
                 "lib/clipboard.min.js",
                 "content/modules/issue-tree.js",
                 "content/modules/bug-manager.js",
+                "content/modules/issue-tooltip.js",
                 "content/redmine.js"
             ],
             "css": [

@@ -234,3 +234,173 @@
 .rh-toast-error {
     background: #e74c3c;
 }
+
+/* ====== ISSUE TOOLTIP MODULE ====== */
+
+.rh-tooltip {
+    position: absolute;
+    z-index: 100000;
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06);
+    width: 650px;
+    max-width: 90vw;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #24292f;
+}
+
+.rh-tooltip.rh-tooltip-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.rh-tooltip-header {
+    background: #f6f8fa;
+    border-bottom: 1px solid #d0d7de;
+    padding: 10px 16px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.rh-tooltip-id {
+    color: #57606a;
+}
+
+.rh-tooltip-tracker {
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    color: #495057;
+}
+
+/* Status colors for header & badge */
+.rh-status-new { color: #e74c3c; font-weight: 600; }
+.rh-status-progress { color: #e67e22; font-weight: 600; }
+.rh-status-resolved { color: #3498db; font-weight: 600; }
+.rh-status-verified { color: #2ecc71; font-weight: 600; }
+.rh-status-closed { color: #7f8c8d; font-style: italic; }
+
+.rh-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: #f1f3f5;
+    border: 1px solid #dee2e6;
+}
+.rh-status-badge.rh-status-new { background: #fee2e2; border-color: #f87171; color: #b91c1c; }
+.rh-status-badge.rh-status-progress { background: #ffedd5; border-color: #fdba74; color: #c2410c; }
+.rh-status-badge.rh-status-resolved { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
+.rh-status-badge.rh-status-verified { background: #dcfce7; border-color: #86efac; color: #15803d; }
+.rh-status-badge.rh-status-closed { background: #f3f4f6; border-color: #d1d5db; color: #4b5563; }
+
+.rh-tooltip-meta {
+    padding: 12px 16px;
+    border-bottom: 1px solid #d0d7de;
+}
+
+.rh-tooltip-subject {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #0969da;
+}
+
+.rh-tooltip-info {
+    margin-bottom: 4px;
+    color: #57606a;
+}
+.rh-tooltip-info a {
+    color: #0969da;
+    text-decoration: none;
+}
+.rh-tooltip-info a:hover {
+    text-decoration: underline;
+}
+
+.rh-tooltip-body {
+    padding: 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.rh-tooltip-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.rh-tooltip-table th {
+    background: #f6f8fa;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #57606a;
+    border-bottom: 1px solid #d0d7de;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.rh-tooltip-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eaecef;
+    vertical-align: middle;
+}
+
+.rh-tooltip-table tr:last-child td {
+    border-bottom: none;
+}
+
+.rh-tooltip-table tr:hover td {
+    background-color: #f6f8fa;
+}
+
+.rh-td-phase {
+    font-weight: 500;
+}
+.rh-td-phase a {
+    color: #24292f;
+    text-decoration: none;
+}
+.rh-td-phase a:hover {
+    color: #0969da;
+    text-decoration: underline;
+}
+
+.rh-tooltip-empty {
+    padding: 20px;
+    text-align: center;
+    color: #57606a;
+    font-style: italic;
+}
+
+.rh-spinner {
+    border: 3px solid rgba(0,0,0,0.1);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border-left-color: #0969da;
+    animation: rh-spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+@keyframes rh-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

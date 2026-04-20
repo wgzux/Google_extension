@@ -124,6 +124,43 @@ router.get('/:id/children', async (req, res) => {
 });
 
 /**
+ * GET /api/issues/:id/tooltip
+ * Lấy dữ liệu tổng hợp cho tooltip hover
+ */
+router.get('/:id/tooltip', async (req, res) => {
+    try {
+        const issueId = parseInt(req.params.id);
+        const redmine = new RedmineAPI(req.user.redmine_url, req.user.api_key);
+        
+        const tooltipData = await redmine.getTooltipData(issueId);
+
+        // Lấy extension data của subtasks để có Actual Date, Plan Release, v.v.
+        if (tooltipData.has_children) {
+            const db = getDb();
+            const childIds = tooltipData.children.map(c => c.id);
+            const placeholders = childIds.map(() => '?').join(',');
+            
+            const extensions = db.prepare(
+                `SELECT * FROM issue_extensions WHERE user_id = ? AND redmine_issue_id IN (${placeholders})`
+            ).all(req.user.id, ...childIds);
+            
+            const extMap = {};
+            extensions.forEach(ext => { extMap[ext.redmine_issue_id] = ext; });
+            
+            tooltipData.children = tooltipData.children.map(child => ({
+                ...child,
+                extension: extMap[child.id] || null
+            }));
+        }
+
+        res.json(tooltipData);
+    } catch (err) {
+        console.error('[Issues] Tooltip error:', err.message);
+        res.status(500).json({ error: 'Failed to get tooltip data: ' + err.message });
+    }
+});
+
+/**
  * PUT /api/issues/:id/extension
  * Cập nhật dữ liệu mở rộng (dev_date, release_date, note...)
  */

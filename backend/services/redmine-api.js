@@ -131,6 +131,99 @@ class RedmineAPI {
         return data.issue;
     }
 
+    // ============ TOOLTIP / HIERARCHY ============
+
+    /**
+     * Tìm root issue (issue tổ tiên cao nhất) bằng cách traverse parent chain
+     * @param {number} issueId - ID issue cần tìm root
+     * @returns {{ id: number, subject: string } | null}
+     */
+    async getRootIssue(issueId) {
+        let currentId = issueId;
+        let rootIssue = null;
+        let depth = 0;
+        const MAX_DEPTH = 10; // Tránh infinite loop
+
+        while (depth < MAX_DEPTH) {
+            const data = await this._fetch(`/issues/${currentId}.json`);
+            const issue = data.issue || data;
+
+            if (!issue.parent) {
+                // Đây là root — nhưng nếu chính là issue ban đầu thì trả null
+                if (issue.id === issueId) {
+                    rootIssue = null;
+                } else {
+                    rootIssue = { id: issue.id, subject: issue.subject };
+                }
+                break;
+            }
+            currentId = issue.parent.id;
+            depth++;
+        }
+
+        return rootIssue;
+    }
+
+    /**
+     * Lấy dữ liệu tổng hợp cho tooltip hover
+     * Bao gồm: issue info, root, parent, watchers, children
+     */
+    async getTooltipData(issueId) {
+        // 1. Lấy issue chi tiết (include watchers)
+        const issue = await this.getIssue(issueId);
+
+        // 2. Lấy children (subtasks)
+        let children = [];
+        try {
+            children = await this.getChildren(issueId);
+        } catch (e) {
+            console.warn('[RedmineAPI] Cannot fetch children for', issueId, e.message);
+        }
+
+        // 3. Tìm root issue
+        let root = null;
+        try {
+            root = await this.getRootIssue(issueId);
+        } catch (e) {
+            console.warn('[RedmineAPI] Cannot find root for', issueId, e.message);
+        }
+
+        // 4. Format children data
+        const formattedChildren = children.map(child => ({
+            id: child.id,
+            subject: child.subject,
+            tracker: child.tracker,
+            status: child.status,
+            start_date: child.start_date || null,
+            due_date: child.due_date || null,
+            done_ratio: child.done_ratio || 0,
+            assigned_to: child.assigned_to || null
+        }));
+
+        // 5. Sắp xếp children theo tên subject (00. xxx < 01. xxx < ...)
+        formattedChildren.sort((a, b) => {
+            return (a.subject || '').localeCompare(b.subject || '', 'vi');
+        });
+
+        return {
+            id: issue.id,
+            tracker: issue.tracker,
+            status: issue.status,
+            subject: issue.subject,
+            root: root,
+            parent: issue.parent || null,
+            author: issue.author || null,
+            watchers: issue.watchers || [],
+            assigned_to: issue.assigned_to || null,
+            start_date: issue.start_date || null,
+            due_date: issue.due_date || null,
+            done_ratio: issue.done_ratio || 0,
+            children: formattedChildren,
+            has_children: formattedChildren.length > 0,
+            children_count: formattedChildren.length
+        };
+    }
+
     // ============ TIME ENTRIES ============
 
     /** Lấy time entries cho 1 issue */

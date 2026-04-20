@@ -2,7 +2,7 @@
  * Redmine Helper - Main Content Script
  * Auto-detects Redmine pages and initializes modules
  */
-(function() {
+(function () {
     'use strict';
 
     // ====== PHÁT HIỆN TRANG REDMINE ======
@@ -44,16 +44,16 @@
         /**
          * Gọi API backend thông qua service worker
          */
-        api: function(endpoint, options) {
+        api: function (endpoint, options) {
             options = options || {};
-            return new Promise(function(resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 chrome.runtime.sendMessage({
                     action: 'api',
                     endpoint: endpoint,
                     method: options.method || 'GET',
                     body: options.body || null,
                     headers: options.headers || {}
-                }, function(response) {
+                }, function (response) {
                     if (chrome.runtime.lastError) {
                         reject(new Error(chrome.runtime.lastError.message));
                         return;
@@ -70,9 +70,9 @@
         /**
          * Lấy settings đã lưu
          */
-        getSettings: function() {
-            return new Promise(function(resolve, reject) {
-                chrome.runtime.sendMessage({ action: 'getSettings' }, function(response) {
+        getSettings: function () {
+            return new Promise(function (resolve, reject) {
+                chrome.runtime.sendMessage({ action: 'getSettings' }, function (response) {
                     if (chrome.runtime.lastError) {
                         reject(new Error(chrome.runtime.lastError.message));
                         return;
@@ -85,7 +85,7 @@
         /**
          * Lấy issue ID từ URL hiện tại
          */
-        getCurrentIssueId: function() {
+        getCurrentIssueId: function () {
             var match = window.location.pathname.match(/\/issues\/(\d+)/);
             return match ? parseInt(match[1]) : null;
         },
@@ -93,9 +93,9 @@
         /**
          * Lấy tất cả issue IDs trên trang hiện tại
          */
-        getAllIssueIdsOnPage: function() {
+        getAllIssueIdsOnPage: function () {
             var ids = [];
-            $('a[href*="/issues/"]').each(function() {
+            $('a[href*="/issues/"]').each(function () {
                 var href = $(this).attr('href');
                 var match = href.match(/\/issues\/(\d+)/);
                 if (match) {
@@ -110,16 +110,20 @@
     };
 
     // ====== KHỞI CHẠY CÁC MODULE ======
-    $(function() {
+    $(function () {
         console.log('[Redmine Helper] 🚀 Running modules...');
 
-        // Phase 1: Các tính năng DOM thuần (không cần backend)
-        if (typeof window.IssueTreeModule !== 'undefined') {
-            window.IssueTreeModule.init();
-        }
+        // Khởi chạy các module tính năng
+        // if (typeof window.IssueTreeModule !== 'undefined') {
+        //     window.IssueTreeModule.init();
+        // }
 
-        if (typeof window.BugManagerModule !== 'undefined') {
-            window.BugManagerModule.init();
+        // if (typeof window.BugManagerModule !== 'undefined') {
+        //     window.BugManagerModule.init();
+        // }
+
+        if (typeof window.IssueTooltipModule !== 'undefined') {
+            window.IssueTooltipModule.init();
         }
 
         console.log('[Redmine Helper] ✅ All modules loaded.');

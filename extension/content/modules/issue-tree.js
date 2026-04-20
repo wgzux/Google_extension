@@ -2,13 +2,13 @@
  * Module: Issue Tree (Version 2.0 - Improved detection)
  * Thu gọn/mở rộng cây issue con trong bảng issue tree của Redmine
  */
-window.IssueTreeModule = (function() {
+window.IssueTreeModule = (function () {
     'use strict';
 
     function init() {
         var issueTree = $('#issue_tree tr.issue td.subject');
         if (issueTree.length <= 1) { // Phải có ít nhất 2 dòng thì mới gọi là cây
-            return; 
+            return;
         }
 
         console.log('[IssueTree] Initializing tree for ' + issueTree.length + ' rows');
@@ -32,10 +32,10 @@ window.IssueTreeModule = (function() {
     }
 
     function processTree(issueTree) {
-        issueTree.each(function() {
+        issueTree.each(function () {
             var td = $(this);
             var tr = td.closest('tr');
-            
+
             var currentIndent = getIndentLevel(td);
             tr.attr('data-rh-indent', currentIndent);
 
@@ -49,7 +49,7 @@ window.IssueTreeModule = (function() {
                         var toggleBtn = $('<span class="rh-tree-toggle rh-tree-expanded" title="Thu gọn">▼</span>');
                         td.prepend(toggleBtn);
 
-                        toggleBtn.on('click', function(e) {
+                        toggleBtn.on('click', function (e) {
                             e.preventDefault();
                             e.stopPropagation();
                             toggleChildren(tr, currentIndent);
@@ -93,20 +93,20 @@ window.IssueTreeModule = (function() {
 
         var controls = $(
             '<div class="rh-tree-controls">' +
-                '<button class="rh-btn rh-btn-sm" id="rh-expand-all">📂 Expand All</button>' +
-                '<button class="rh-btn rh-btn-sm" id="rh-collapse-all" style="margin-left: 5px;">📁 Collapse All</button>' +
+            '<button class="rh-btn rh-btn-sm" id="rh-expand-all">📂 Expand All</button>' +
+            '<button class="rh-btn rh-btn-sm" id="rh-collapse-all" style="margin-left: 5px;">📁 Collapse All</button>' +
             '</div>'
         );
 
         $('#issue_tree').before(controls);
 
-        $('#rh-expand-all').on('click', function() {
+        $('#rh-expand-all').on('click', function () {
             $('#issue_tree tr.issue').removeClass('rh-tree-hidden');
             $('.rh-tree-toggle').removeClass('rh-tree-collapsed').addClass('rh-tree-expanded').text('▼');
         });
 
-        $('#rh-collapse-all').on('click', function() {
-            $('#issue_tree tr.issue').each(function() {
+        $('#rh-collapse-all').on('click', function () {
+            $('#issue_tree tr.issue').each(function () {
                 var indent = parseInt($(this).attr('data-rh-indent')) || 0;
                 if (indent > 0) $(this).addClass('rh-tree-hidden');
             });
