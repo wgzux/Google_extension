@@ -47,8 +47,9 @@ window.IssueTooltipModule = (function () {
             var anchor = $(this);
             var href = anchor.attr('href') || '';
             
-            // Xử lý để parse ID từ URL dạng "/issues/123" hoặc "http://.../issues/123"
-            var match = href.match(/\/issues\/(\d+)(?:\?|#|$)/);
+            // Parse ID từ URL: /issues/123, /issues/123?..., /issues/123#...
+            // Regex: dấu / rồi số, kết thúc bằng end-of-string hoặc ?, #, /
+            var match = href.match(/\/issues\/(\d+)(?:[\?\#\/]|$)/);
             if (!match) return; // Không phải link chi tiết issue
             
             var issueId = parseInt(match[1]);
@@ -60,9 +61,9 @@ window.IssueTooltipModule = (function () {
             if (anchor.children('img, i').length > 0 && anchor.text().trim() === '') return;
 
             clearTimeout(leaveTimer);
-            
-            if (activeAnchor && activeAnchor[0] === anchor[0]) {
-                // Đang ở cùng 1 link, không làm gì cả
+
+            // Nếu đang hover cùng link + tooltip đang visible → giữ nguyên
+            if (activeAnchor && activeAnchor[0] === anchor[0] && currentTooltip.hasClass('rh-tooltip-visible')) {
                 return;
             }
 
@@ -124,7 +125,7 @@ window.IssueTooltipModule = (function () {
                 return resolve(cache[issueId].data);
             }
 
-            window.RedmineHelper.api('/issues/' + issueId + '/tooltip')
+            window.RedmineHelper.api('/api/issues/' + issueId + '/tooltip')
                 .then(function(data) {
                     cache[issueId] = { data: data, timestamp: Date.now() };
                     resolve(data);
