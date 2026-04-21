@@ -241,20 +241,20 @@
     position: absolute;
     z-index: 100000;
     background: #fff;
-    border: 1px solid #d0d7de;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06);
-    width: 650px;
-    max-width: 90vw;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    width: 720px;
+    max-width: 95vw;
     font-size: 13px;
     line-height: 1.5;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(8px);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    transform: translateY(6px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
     pointer-events: auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    color: #24292f;
+    font-family: Arial, "Helvetica Neue", sans-serif;
+    color: #222;
 }
 
 .rh-tooltip.rh-tooltip-visible {
@@ -263,144 +263,139 @@
     transform: translateY(0);
 }
 
+/* ── HEADER ── */
 .rh-tooltip-header {
-    background: #f6f8fa;
-    border-bottom: 1px solid #d0d7de;
-    padding: 10px 16px;
-    border-radius: 8px 8px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 2px solid #222;
+    background: #fff;
+    border-radius: 4px 4px 0 0;
 }
 
-.rh-tooltip-id {
-    color: #57606a;
+/* Dòng 1: "ID: 95574 - Task - Resolved" — in đậm */
+.rh-th-title {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 2px;
 }
 
-.rh-tooltip-tracker {
-    background: #e9ecef;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    color: #495057;
+/* Dòng 2–5 — label in đậm, value bình thường */
+.rh-th-row {
+    font-size: 13px;
+    line-height: 1.6;
 }
 
-/* Status colors for header & badge */
-.rh-status-new { color: #e74c3c; font-weight: 600; }
-.rh-status-progress { color: #e67e22; font-weight: 600; }
-.rh-status-resolved { color: #3498db; font-weight: 600; }
-.rh-status-verified { color: #2ecc71; font-weight: 600; }
-.rh-status-closed { color: #7f8c8d; font-style: italic; }
-
-.rh-status-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    background: #f1f3f5;
-    border: 1px solid #dee2e6;
-}
-.rh-status-badge.rh-status-new { background: #fee2e2; border-color: #f87171; color: #b91c1c; }
-.rh-status-badge.rh-status-progress { background: #ffedd5; border-color: #fdba74; color: #c2410c; }
-.rh-status-badge.rh-status-resolved { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
-.rh-status-badge.rh-status-verified { background: #dcfce7; border-color: #86efac; color: #15803d; }
-.rh-status-badge.rh-status-closed { background: #f3f4f6; border-color: #d1d5db; color: #4b5563; }
-
-.rh-tooltip-meta {
-    padding: 12px 16px;
-    border-bottom: 1px solid #d0d7de;
+.rh-th-label {
+    font-weight: bold;
 }
 
-.rh-tooltip-subject {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #0969da;
+.rh-th-value {
+    font-weight: normal;
 }
 
-.rh-tooltip-info {
-    margin-bottom: 4px;
-    color: #57606a;
-}
-.rh-tooltip-info a {
-    color: #0969da;
+.rh-th-link {
+    color: #1557a1;
     text-decoration: none;
 }
-.rh-tooltip-info a:hover {
+.rh-th-link:hover {
     text-decoration: underline;
 }
 
+/* ── BODY (bảng 2 cột) ── */
 .rh-tooltip-body {
-    padding: 0;
-    max-height: 280px;
+    max-height: 350px;
     overflow-y: auto;
 }
 
 .rh-tooltip-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0;
+    table-layout: fixed;
 }
 
-.rh-tooltip-table th {
-    background: #f6f8fa;
-    padding: 8px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #57606a;
-    border-bottom: 1px solid #d0d7de;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+/* Cột tên phase: ~22% mỗi bên */
+.rh-tooltip-table .rh-td-phase {
+    width: 22%;
+    font-weight: bold;
+    font-size: 12px;
+    color: #222;
+    vertical-align: top;
+    padding: 5px 6px;
+    border: 1px solid #ccc;
+    word-break: break-word;
 }
 
-.rh-tooltip-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #eaecef;
-    vertical-align: middle;
-}
-
-.rh-tooltip-table tr:last-child td {
-    border-bottom: none;
-}
-
-.rh-tooltip-table tr:hover td {
-    background-color: #f6f8fa;
-}
-
-.rh-td-phase {
-    font-weight: 500;
-}
-.rh-td-phase a {
-    color: #24292f;
+.rh-td-phase-link {
+    color: #222;
     text-decoration: none;
 }
-.rh-td-phase a:hover {
-    color: #0969da;
+.rh-td-phase-link:hover {
+    color: #1557a1;
     text-decoration: underline;
 }
 
-.rh-tooltip-empty {
-    padding: 20px;
-    text-align: center;
-    color: #57606a;
-    font-style: italic;
+/* Cột label: Status / Start Date / End Date — 12% mỗi bên */
+.rh-tooltip-table .rh-td-label {
+    width: 12%;
+    font-size: 12px;
+    color: #444;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
+/* Cột giá trị — 16% mỗi bên */
+.rh-tooltip-table .rh-td-value {
+    width: 16%;
+    font-size: 12px;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+
+/* Ô trống khi số lẻ */
+.rh-tooltip-table .rh-td-empty {
+    background: #fafafa;
+}
+
+/* Hàng phân cách giữa các cặp issue */
+.rh-tooltip-table .rh-row-sep td {
+    height: 4px;
+    background: #e8e8e8;
+    border: none;
+    padding: 0;
+}
+
+/* Ngày trễ hạn — đỏ */
+.rh-date-late {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Không có subtask */
+.rh-tooltip-empty {
+    padding: 16px;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    font-size: 13px;
+}
+
+/* Loading spinner */
 .rh-spinner {
     border: 3px solid rgba(0,0,0,0.1);
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     border-left-color: #0969da;
     animation: rh-spin 1s linear infinite;
     display: inline-block;
     vertical-align: middle;
-    margin-right: 8px;
+    margin-right: 6px;
 }
 
 @keyframes rh-spin {
-    0% { transform: rotate(0deg); }
+    0%   { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
