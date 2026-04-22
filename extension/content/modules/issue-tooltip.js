@@ -25,11 +25,11 @@ window.IssueTooltipModule = (function () {
             $('body').append('<div id="rh-issue-tooltip" class="rh-tooltip"></div>');
             currentTooltip = $('#rh-issue-tooltip');
 
-            currentTooltip.on('mouseenter', function() {
+            currentTooltip.on('mouseenter', function () {
                 clearTimeout(leaveTimer);
             });
 
-            currentTooltip.on('mouseleave', function() {
+            currentTooltip.on('mouseleave', function () {
                 scheduleHide();
             });
         } else {
@@ -48,6 +48,12 @@ window.IssueTooltipModule = (function () {
             if (!match) return;
 
             var issueId = parseInt(match[1]);
+
+            // Bỏ qua các link thao tác (edit, copy, time entries, etc.)
+            if (href.match(/\/(edit|copy|time_entries|watchers|relations)/)) return;
+
+            // Bỏ qua các button thao tác (thường có class icon hoặc nằm trong thanh công cụ .contextual)
+            if (anchor.hasClass('icon') || anchor.closest('.contextual').length > 0 || anchor.attr('data-method')) return;
 
             // Bỏ qua link trong chính tooltip
             if (anchor.closest('#rh-issue-tooltip').length > 0) return;
@@ -80,7 +86,7 @@ window.IssueTooltipModule = (function () {
 
     function scheduleHide() {
         clearTimeout(leaveTimer);
-        leaveTimer = setTimeout(function() {
+        leaveTimer = setTimeout(function () {
             hideTooltip();
         }, LEAVE_DELAY);
     }
@@ -96,11 +102,11 @@ window.IssueTooltipModule = (function () {
         positionTooltip(anchor);
         currentTooltip.addClass('rh-tooltip-visible');
 
-        getTooltipData(issueId).then(function(data) {
+        getTooltipData(issueId).then(function (data) {
             if (!activeAnchor || activeAnchor[0] !== anchor[0]) return;
             renderTooltip(data);
             positionTooltip(anchor);
-        }).catch(function(err) {
+        }).catch(function (err) {
             if (!activeAnchor || activeAnchor[0] !== anchor[0]) return;
             console.error('[IssueTooltip] Error loading data:', err);
             currentTooltip.html('<div style="padding: 15px; color: #e74c3c;">⚠️ Lỗi tải dữ liệu.</div>');
@@ -108,14 +114,14 @@ window.IssueTooltipModule = (function () {
     }
 
     function getTooltipData(issueId) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var now = Date.now();
             if (cache[issueId] && (now - cache[issueId].timestamp < CACHE_TTL)) {
                 return resolve(cache[issueId].data);
             }
 
             window.RedmineHelper.api('/api/issues/' + issueId + '/tooltip')
-                .then(function(data) {
+                .then(function (data) {
                     cache[issueId] = { data: data, timestamp: Date.now() };
                     resolve(data);
                 })
@@ -125,7 +131,7 @@ window.IssueTooltipModule = (function () {
 
     // ====== RENDER TOOLTIP ======
     function renderTooltip(data) {
-        var statusName  = data.status  ? data.status.name  : '';
+        var statusName = data.status ? data.status.name : '';
         var trackerName = data.tracker ? data.tracker.name : '';
 
         // ====== HEADER ======
@@ -137,11 +143,11 @@ window.IssueTooltipModule = (function () {
         html += '<div class="rh-th-row"><span class="rh-th-label">Subject:</span> <span class="rh-th-value">' + escapeHtml(data.subject) + '</span></div>';
 
         // Dòng 3: Root: X  Parent: Y  (hiện nếu có)
-        var hasRoot   = data.root   && data.root.id   && data.root.id !== data.id;
+        var hasRoot = data.root && data.root.id && data.root.id !== data.id;
         var hasParent = data.parent && data.parent.id;
         if (hasRoot || hasParent) {
             html += '<div class="rh-th-row">';
-            if (hasRoot)   html += '<span class="rh-th-label">Root:</span> <a class="rh-th-link" href="/issues/' + data.root.id   + '">' + data.root.id   + '</a>&nbsp;&nbsp;';
+            if (hasRoot) html += '<span class="rh-th-label">Root:</span> <a class="rh-th-link" href="/issues/' + data.root.id + '">' + data.root.id + '</a>&nbsp;&nbsp;';
             if (hasParent) html += '<span class="rh-th-label">Parent:</span> <a class="rh-th-link" href="/issues/' + data.parent.id + '">' + data.parent.id + '</a>';
             html += '</div>';
         }
@@ -152,7 +158,7 @@ window.IssueTooltipModule = (function () {
         }
 
         // Dòng 5: Follow Member: <danh sách>
-        var watcherNames = data.watchers ? data.watchers.map(function(w) { return escapeHtml(w.name); }).join(', ') : '';
+        var watcherNames = data.watchers ? data.watchers.map(function (w) { return escapeHtml(w.name); }).join(', ') : '';
         if (watcherNames) {
             html += '<div class="rh-th-row"><span class="rh-th-label">Follow Member:</span> <span class="rh-th-value">' + watcherNames + '</span></div>';
         }
@@ -165,7 +171,7 @@ window.IssueTooltipModule = (function () {
 
             var children = data.children;
             for (var i = 0; i < children.length; i += 2) {
-                var left  = children[i];
+                var left = children[i];
                 var right = children[i + 1] || null;
 
                 var L = buildChildCells(left);
@@ -199,8 +205,8 @@ window.IssueTooltipModule = (function () {
      * Trả về: { nameHtml, rows: [row1, row2, row3] }
      */
     function buildChildCells(child) {
-        var hasExt    = !!(child.extension);
-        var hasPlan   = hasExt && !!child.extension.plan_release;
+        var hasExt = !!(child.extension);
+        var hasPlan = hasExt && !!child.extension.plan_release;
         var hasActual = hasExt && !!(child.extension.release_date || child.extension.dev_date);
 
         // Tên phase — rowspan=3 để trải dài cả 3 dòng
@@ -216,21 +222,21 @@ window.IssueTooltipModule = (function () {
         var label2, val2;
         if (hasPlan) {
             label2 = 'Plan';
-            val2   = formatDateWithDay(child.extension.plan_release);
+            val2 = formatDateWithDay(child.extension.plan_release);
         } else {
             label2 = 'Start Date';
-            val2   = formatDateWithDay(child.start_date);
+            val2 = formatDateWithDay(child.start_date);
         }
         var row2 = '<td class="rh-td-label">' + label2 + '</td><td class="rh-td-value">' + val2 + '</td>';
 
         // Row 3: End Date hoặc Actual
         var label3, val3;
         if (hasActual) {
-            var actDate  = child.extension.release_date || child.extension.dev_date;
+            var actDate = child.extension.release_date || child.extension.dev_date;
             var planDate = child.extension.plan_release || child.due_date;
-            var isLate   = isPastDue(actDate, planDate);
+            var isLate = isPastDue(actDate, planDate);
             label3 = 'Actual';
-            val3   = isLate
+            val3 = isLate
                 ? '<span class="rh-date-late">' + formatDateWithDay(actDate) + '</span>'
                 : formatDateWithDay(actDate);
         } else {
@@ -249,22 +255,22 @@ window.IssueTooltipModule = (function () {
     function positionTooltip(anchor) {
         if (!currentTooltip || !anchor) return;
 
-        var offset  = anchor.offset();
-        var tWidth  = currentTooltip.outerWidth();
+        var offset = anchor.offset();
+        var tWidth = currentTooltip.outerWidth();
         var tHeight = currentTooltip.outerHeight();
-        var aWidth  = anchor.outerWidth();
+        var aWidth = anchor.outerWidth();
         var aHeight = anchor.outerHeight();
 
-        var vW        = $(window).width();
-        var vH        = $(window).height();
-        var scrollTop  = $(window).scrollTop();
+        var vW = $(window).width();
+        var vH = $(window).height();
+        var scrollTop = $(window).scrollTop();
         var scrollLeft = $(window).scrollLeft();
 
-        var top  = offset.top + aHeight + 8;
+        var top = offset.top + aHeight + 8;
         var left = offset.left + (aWidth / 2) - (tWidth / 2);
 
         if (left + tWidth > scrollLeft + vW - 10) left = scrollLeft + vW - tWidth - 10;
-        if (left < scrollLeft + 10)               left = scrollLeft + 10;
+        if (left < scrollLeft + 10) left = scrollLeft + 10;
 
         if (top + tHeight > scrollTop + vH - 10) {
             top = offset.top - tHeight - 8;
@@ -277,11 +283,11 @@ window.IssueTooltipModule = (function () {
     // ====== UTILS ======
     function getStatusClass(statusName) {
         var s = (statusName || '').toLowerCase();
-        if (s.indexOf('new')      > -1 || s.indexOf('mới')       > -1) return 'rh-status-new';
-        if (s.indexOf('progress') > -1 || s.indexOf('assigned')  > -1) return 'rh-status-progress';
-        if (s.indexOf('resolved') > -1 || s.indexOf('feedback')  > -1) return 'rh-status-resolved';
-        if (s.indexOf('verified') > -1 || s.indexOf('xác nhận')  > -1) return 'rh-status-verified';
-        if (s.indexOf('closed')   > -1 || s.indexOf('rejected')  > -1) return 'rh-status-closed';
+        if (s.indexOf('new') > -1 || s.indexOf('mới') > -1) return 'rh-status-new';
+        if (s.indexOf('progress') > -1 || s.indexOf('assigned') > -1) return 'rh-status-progress';
+        if (s.indexOf('resolved') > -1 || s.indexOf('feedback') > -1) return 'rh-status-resolved';
+        if (s.indexOf('verified') > -1 || s.indexOf('xác nhận') > -1) return 'rh-status-verified';
+        if (s.indexOf('closed') > -1 || s.indexOf('rejected') > -1) return 'rh-status-closed';
         return '';
     }
 
@@ -291,8 +297,8 @@ window.IssueTooltipModule = (function () {
         if (isNaN(d.getTime())) return dateStr;
 
         var yyyy = d.getFullYear();
-        var mm   = String(d.getMonth() + 1).padStart(2, '0');
-        var dd   = String(d.getDate()).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
         var days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
         return yyyy + '-' + mm + '-' + dd + ' (' + days[d.getDay()] + ')';
@@ -301,7 +307,7 @@ window.IssueTooltipModule = (function () {
     function isPastDue(actualDateStr, dueDateStr) {
         if (!dueDateStr) return false;
         var dateToCheck = actualDateStr ? new Date(actualDateStr) : new Date();
-        var dueInfo     = new Date(dueDateStr);
+        var dueInfo = new Date(dueDateStr);
         dateToCheck.setHours(0, 0, 0, 0);
         dueInfo.setHours(0, 0, 0, 0);
         return dateToCheck > dueInfo;
@@ -310,11 +316,11 @@ window.IssueTooltipModule = (function () {
     function escapeHtml(unsafe) {
         if (unsafe === null || unsafe === undefined) return '';
         return unsafe.toString()
-            .replace(/&/g,  '&amp;')
-            .replace(/</g,  '&lt;')
-            .replace(/>/g,  '&gt;')
-            .replace(/"/g,  '&quot;')
-            .replace(/'/g,  '&#039;');
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     return { init: init };
