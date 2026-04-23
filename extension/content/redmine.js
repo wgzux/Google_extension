@@ -1,7 +1,7 @@
 /**
- * Redmine Helper - Main Content Script
- * Auto-detects Redmine pages and initializes modules
- */
+* Redmine Helper - Main Content Script
+* Auto-detects Redmine pages and initializes modules
+*/
 (function () {
     'use strict';
 
