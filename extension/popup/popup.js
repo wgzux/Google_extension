@@ -1,21 +1,39 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const elRedmineUrl = document.getElementById('redmine-url');
-    const elApiKey    = document.getElementById('api-key');
-    const elBtnTest   = document.getElementById('btn-test');
-    const elBtnSave   = document.getElementById('btn-save');
-    const elMessage   = document.getElementById('message');
+    const elApiKey = document.getElementById('api-key');
+    const elBtnTest = document.getElementById('btn-test');
+    const elBtnSave = document.getElementById('btn-save');
+    const elMessage = document.getElementById('message');
     const elStatusBar = document.getElementById('status-bar');
     const elStatusText = document.getElementById('status-text');
-    const elUserInfo  = document.getElementById('user-info');
-    const elUserName  = document.getElementById('user-name');
+    const elUserInfo = document.getElementById('user-info');
+    const elUserName = document.getElementById('user-name');
     const elServerUrl = document.getElementById('server-url');
-    const elShowKey   = document.getElementById('show-key');
+    const elShowKey = document.getElementById('show-key');
+    const elConfigForm = document.getElementById('config-form');
+    const elBtnDisconnect = document.getElementById('btn-disconnect');
 
     // ====== Load settings đã lưu ======
     const stored = await chrome.storage.local.get(['redmine_url', 'api_key', 'user_name']);
     if (stored.redmine_url) elRedmineUrl.value = stored.redmine_url;
-    if (stored.api_key)     elApiKey.value = stored.api_key;
-    if (stored.user_name)   setConnected(stored.user_name, stored.redmine_url);
+    if (stored.api_key) elApiKey.value = stored.api_key;
+    if (stored.user_name) setConnected(stored.user_name, stored.redmine_url);
+
+    // ====== Tự động lấy URL từ tab hiện tại ======
+    if (!elRedmineUrl.value) {
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            if (tabs && tabs[0] && tabs[0].url) {
+                try {
+                    const url = new URL(tabs[0].url);
+                    if (url.protocol.startsWith('http')) {
+                        elRedmineUrl.value = url.origin;
+                        showMessage('Đã tự động điền URL từ tab hiện tại!', 'info');
+                    }
+                } catch (e) { }
+            }
+        });
+    }
+
 
     // ====== Toggle show/hide API key ======
     elShowKey.addEventListener('click', (e) => {
@@ -27,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ====== Test Connection — gọi thẳng Redmine API từ popup ======
     elBtnTest.addEventListener('click', async () => {
         const redmineUrl = elRedmineUrl.value.trim().replace(/\/+$/, '');
-        const apiKey     = elApiKey.value.trim();
+        const apiKey = elApiKey.value.trim();
 
         if (!redmineUrl || !apiKey) {
             showMessage('Vui lòng nhập Redmine URL và API Key', 'error');
@@ -56,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ====== Save Settings ======
     elBtnSave.addEventListener('click', async () => {
         const redmineUrl = elRedmineUrl.value.trim().replace(/\/+$/, '');
-        const apiKey     = elApiKey.value.trim();
+        const apiKey = elApiKey.value.trim();
 
         if (!redmineUrl || !apiKey) {
             showMessage('Vui lòng nhập Redmine URL và API Key', 'error');
@@ -93,6 +111,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ====== Disconnect ======
+    elBtnDisconnect.addEventListener('click', async () => {
+        await chrome.storage.local.remove(['api_key', 'user_name']);
+        elApiKey.value = '';
+        elConfigForm.classList.remove('hidden');
+        elUserInfo.classList.add('hidden');
+        elStatusBar.className = 'status-bar disconnected';
+        elStatusText.textContent = 'Chưa kết nối';
+        showMessage('Đã xóa cấu hình. Vui lòng thiết lập lại.', 'info');
+    });
+
     // ====== Helpers ======
     function showMessage(text, type) {
         elMessage.textContent = text;
@@ -101,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function setConnected(name, url) {
+        elConfigForm.classList.add('hidden');
         elStatusBar.className = 'status-bar connected';
         elStatusText.textContent = 'Đã kết nối';
         elUserInfo.classList.remove('hidden');

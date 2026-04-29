@@ -21,10 +21,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // ====== ROUTER: map endpoint → Redmine API call ======
 async function handleApiRequest(msg) {
-    const { redmine_url, api_key } = await chrome.storage.local.get(['redmine_url', 'api_key']);
+    let { redmine_url, api_key } = await chrome.storage.local.get(['redmine_url', 'api_key']);
 
-    if (!redmine_url || !api_key) {
-        throw new Error('Chưa cấu hình. Vui lòng mở Popup nhập Redmine URL và API Key.');
+    if (!redmine_url) {
+        throw new Error('Chưa cấu hình Redmine URL. Vui lòng mở lại trang Redmine bất kỳ để tự động nhận dạng.');
     }
 
     const redmine = new RedmineAPI(redmine_url, api_key);
@@ -58,14 +58,31 @@ class RedmineAPI {
         this.apiKey = apiKey;
     }
 
-    async _fetch(path) {
+    async _fetch(path, isRetry = false) {
         const url = `${this.baseUrl}${path}`;
-        const res = await fetch(url, {
-            headers: {
-                'X-Redmine-API-Key': this.apiKey,
-                'Content-Type': 'application/json'
+        
+        // Cố gắng fetch API Key ngầm nếu chưa có
+        if (!this.apiKey && !isRetry) {
+            this.apiKey = await this._fetchApiKeySilently();
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.apiKey) {
+            headers['X-Redmine-API-Key'] = this.apiKey;
+        }
+
+        // Bắt buộc include credentials (cookies) để fetch ngầm hoạt động
+        const res = await fetch(url, { headers, credentials: 'omit' });
+
+        // Tự phục hồi: Bắt lỗi 401 khi Key cũ hết hạn hoặc bị sai
+        if (res.status === 401 && !isRetry) {
+            console.log("[ServiceWorker] Phát hiện 401, đang lấy lại API Key mới...");
+            const newKey = await this._fetchApiKeySilently();
+            if (newKey) {
+                this.apiKey = newKey;
+                return this._fetch(path, true);
             }
-        });
+        }
 
         if (!res.ok) {
             const text = await res.text();
@@ -73,6 +90,43 @@ class RedmineAPI {
         }
 
         return res.json();
+    }
+
+    // Hàm cào ngầm API Key
+    async _fetchApiKeySilently() {
+        try {
+            console.log("[ServiceWorker] Đang cào ngầm API Key từ /my/account...");
+            const response = await fetch(`${this.baseUrl}/my/account`, {
+                // Background script có quyền "host_permissions", dùng include sẽ gửi cả cookie phiên đăng nhập hiện tại
+                credentials: 'include' 
+            });
+            const htmlText = await response.text();
+            
+            // Dùng Regex quét tìm API Key trong chuỗi HTML
+            let newKey = null;
+            const match = htmlText.match(/<pre id="api-access-key"[^>]*>([^<]+)<\/pre>/i) || htmlText.match(/api_key=([a-f0-9]{40})/i);
+            
+            if (match && match[1]) {
+                newKey = match[1].trim();
+            } else {
+                // Thử quét chuỗi 40 ký tự hex bất kỳ
+                const match40 = htmlText.match(/([a-f0-9]{40})/i);
+                if (match40) {
+                    newKey = match40[1];
+                }
+            }
+
+            if (newKey && /^[a-f0-9]{40}$/i.test(newKey)) {
+                await chrome.storage.local.set({ api_key: newKey });
+                console.log("[ServiceWorker] Lấy lại API Key thành công!", newKey.slice(0, 5) + "...");
+                return newKey;
+            }
+            console.warn("[ServiceWorker] Không tìm thấy API Key trong HTML /my/account");
+            return null;
+        } catch (e) {
+            console.error("[ServiceWorker] Lỗi cào ngầm API Key", e);
+            return null;
+        }
     }
 
     /** Chi tiết 1 issue (kèm watchers) */

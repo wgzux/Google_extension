@@ -39,6 +39,30 @@
 
     console.log('[Redmine Helper] ✅ Redmine page detected! Initializing...');
 
+    // ====== AUTO-CONFIG ======
+    function autoDetectConfig() {
+        var currentUrl = window.location.origin;
+
+        // Lưu URL
+        chrome.storage.local.get(['redmine_url', 'api_key'], function(stored) {
+            var toSave = {};
+            var shouldSave = false;
+
+            if (!stored.redmine_url || stored.redmine_url !== currentUrl) {
+                toSave.redmine_url = currentUrl;
+                shouldSave = true;
+                console.log('[Redmine Helper] Auto-saved Redmine URL:', currentUrl);
+            }
+
+            if (shouldSave) {
+                chrome.storage.local.set(toSave);
+            }
+        });
+    }
+
+    // Chạy auto config
+    autoDetectConfig();
+
     // ====== HELPER: GỌI BACKEND API QUA BACKGROUND ======
     window.RedmineHelper = {
         /**

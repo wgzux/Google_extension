@@ -20,25 +20,27 @@
         </div>
 
         <!-- Form cấu hình -->
-        <div class="form-group">
-            <label for="redmine-url">🌐 Redmine URL</label>
-            <input type="url" id="redmine-url" placeholder="http://your-redmine.com" />
-        </div>
+        <div id="config-form">
+            <div class="form-group">
+                <label for="redmine-url">🌐 Redmine URL</label>
+                <input type="url" id="redmine-url" placeholder="http://your-redmine.com" />
+            </div>
 
-        <div class="form-group">
-            <label for="api-key">🔑 API Key</label>
-            <input type="password" id="api-key" placeholder="Lấy từ My Account → API access key" />
-            <small><a href="#" id="show-key">Hiện</a></small>
-        </div>
+            <div class="form-group">
+                <label for="api-key">🔑 API Key</label>
+                <input type="password" id="api-key" placeholder="Lấy từ My Account → API access key" />
+                <small><a href="#" id="show-key">Hiện</a></small>
+            </div>
 
-        <!-- Buttons -->
-        <div class="btn-group">
-            <button id="btn-test" class="btn btn-secondary">
-                🔍 Test
-            </button>
-            <button id="btn-save" class="btn btn-primary">
-                💾 Lưu
-            </button>
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button id="btn-test" class="btn btn-secondary">
+                    🔍 Test
+                </button>
+                <button id="btn-save" class="btn btn-primary">
+                    💾 Lưu
+                </button>
+            </div>
         </div>
 
         <!-- Result message -->
@@ -54,6 +56,9 @@
                 <span class="label">🌐 Server:</span>
                 <span id="server-url">-</span>
             </div>
+            <button id="btn-disconnect" class="btn btn-secondary" style="margin-top: 15px; width: 100%; border-color: #e74c3c; color: #e74c3c;">
+                🔌 Cấu hình lại
+            </button>
         </div>
     </div>
 
