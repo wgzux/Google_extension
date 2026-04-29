@@ -61,18 +61,23 @@ window.IssueTooltipModule = (function () {
             // Bỏ qua link chỉ có icon
             if (anchor.children('img, i').length > 0 && anchor.text().trim() === '') return;
 
-            clearTimeout(leaveTimer);
+            // Kiểm tra cấu hình có bật Tooltip không
+            chrome.storage.local.get({ isTooltipEnabled: true }, function(stored) {
+                if (stored.isTooltipEnabled === false) return;
 
-            // Nếu đang hover cùng link + tooltip đang visible → giữ nguyên
-            if (activeAnchor && activeAnchor[0] === anchor[0] && currentTooltip.hasClass('rh-tooltip-visible')) {
-                return;
-            }
+                clearTimeout(leaveTimer);
 
-            activeAnchor = anchor;
-            clearTimeout(hoverTimer);
-            hoverTimer = setTimeout(function () {
-                showTooltip(issueId, anchor);
-            }, HOVER_DELAY);
+                // Nếu đang hover cùng link + tooltip đang visible → giữ nguyên
+                if (activeAnchor && activeAnchor[0] === anchor[0] && currentTooltip.hasClass('rh-tooltip-visible')) {
+                    return;
+                }
+
+                activeAnchor = anchor;
+                clearTimeout(hoverTimer);
+                hoverTimer = setTimeout(function () {
+                    showTooltip(issueId, anchor);
+                }, HOVER_DELAY);
+            });
         });
 
         $('body').on('mouseleave', 'a[href*="/issues/"]', function (e) {
