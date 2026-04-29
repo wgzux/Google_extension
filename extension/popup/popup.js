@@ -1,39 +1,33 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const elRedmineUrl = document.getElementById('redmine-url');
-    const elApiKey = document.getElementById('api-key');
-    const elBackendUrl = document.getElementById('backend-url');
-    const elBtnTest = document.getElementById('btn-test');
-    const elBtnSave = document.getElementById('btn-save');
-    const elBtnSync = document.getElementById('btn-sync');
-    const elMessage = document.getElementById('message');
+    const elApiKey    = document.getElementById('api-key');
+    const elBtnTest   = document.getElementById('btn-test');
+    const elBtnSave   = document.getElementById('btn-save');
+    const elMessage   = document.getElementById('message');
     const elStatusBar = document.getElementById('status-bar');
     const elStatusText = document.getElementById('status-text');
-    const elUserInfo = document.getElementById('user-info');
-    const elUserName = document.getElementById('user-name');
+    const elUserInfo  = document.getElementById('user-info');
+    const elUserName  = document.getElementById('user-name');
     const elServerUrl = document.getElementById('server-url');
-    const elShowKey = document.getElementById('show-key');
+    const elShowKey   = document.getElementById('show-key');
 
-    // Load saved settings
-    const stored = await chrome.storage.local.get(['redmine_url', 'api_key', 'backend_url', 'user_id', 'user_name']);
+    // ====== Load settings đã lưu ======
+    const stored = await chrome.storage.local.get(['redmine_url', 'api_key', 'user_name']);
     if (stored.redmine_url) elRedmineUrl.value = stored.redmine_url;
-    if (stored.api_key) elApiKey.value = stored.api_key;
-    if (stored.backend_url) elBackendUrl.value = stored.backend_url;
+    if (stored.api_key)     elApiKey.value = stored.api_key;
+    if (stored.user_name)   setConnected(stored.user_name, stored.redmine_url);
 
-    if (stored.user_name) {
-        setConnected(stored.user_name, stored.redmine_url);
-    }
-
-    // Toggle show/hide API key
+    // ====== Toggle show/hide API key ======
     elShowKey.addEventListener('click', (e) => {
         e.preventDefault();
         elApiKey.type = elApiKey.type === 'password' ? 'text' : 'password';
+        elShowKey.textContent = elApiKey.type === 'password' ? 'Hiện' : 'Ẩn';
     });
 
-    // Test Connection
+    // ====== Test Connection — gọi thẳng Redmine API từ popup ======
     elBtnTest.addEventListener('click', async () => {
-        const backendUrl = elBackendUrl.value.replace(/\/+$/, '');
-        const redmineUrl = elRedmineUrl.value.replace(/\/+$/, '');
-        const apiKey = elApiKey.value.trim();
+        const redmineUrl = elRedmineUrl.value.trim().replace(/\/+$/, '');
+        const apiKey     = elApiKey.value.trim();
 
         if (!redmineUrl || !apiKey) {
             showMessage('Vui lòng nhập Redmine URL và API Key', 'error');
@@ -41,108 +35,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         showMessage('Đang kiểm tra kết nối...', 'info');
+        elBtnTest.disabled = true;
 
         try {
-            // Test backend health
-            const healthRes = await fetch(`${backendUrl}/api/health`);
-            if (!healthRes.ok) throw new Error('Backend server không phản hồi');
+            const res = await fetch(`${redmineUrl}/users/current.json`, {
+                headers: { 'X-Redmine-API-Key': apiKey }
+            });
 
-            // Test Redmine connection
-            const verifyRes = await fetch(
-                `${backendUrl}/api/auth/verify?redmine_url=${encodeURIComponent(redmineUrl)}&api_key=${encodeURIComponent(apiKey)}`
-            );
-            const data = await verifyRes.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — Sai API Key hoặc URL`);
 
-            if (data.success) {
-                showMessage(`✅ Kết nối thành công! User: ${data.user.name}`, 'success');
-            } else {
-                showMessage(`❌ Lỗi: ${data.error}`, 'error');
-            }
+            const data = await res.json();
+            showMessage(`✅ Kết nối thành công! Xin chào ${data.user.firstname} ${data.user.lastname}`, 'success');
         } catch (err) {
-            showMessage(`❌ Không thể kết nối: ${err.message}`, 'error');
+            showMessage(`❌ ${err.message}`, 'error');
+        } finally {
+            elBtnTest.disabled = false;
         }
     });
 
-    // Save & Register
+    // ====== Save Settings ======
     elBtnSave.addEventListener('click', async () => {
-        const backendUrl = elBackendUrl.value.replace(/\/+$/, '');
-        const redmineUrl = elRedmineUrl.value.replace(/\/+$/, '');
-        const apiKey = elApiKey.value.trim();
+        const redmineUrl = elRedmineUrl.value.trim().replace(/\/+$/, '');
+        const apiKey     = elApiKey.value.trim();
 
         if (!redmineUrl || !apiKey) {
             showMessage('Vui lòng nhập Redmine URL và API Key', 'error');
             return;
         }
 
-        showMessage('Đang đăng ký...', 'info');
+        showMessage('Đang lưu và xác thực...', 'info');
+        elBtnSave.disabled = true;
 
         try {
-            const res = await fetch(`${backendUrl}/api/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ redmine_url: redmineUrl, api_key: apiKey })
+            // Xác thực trực tiếp với Redmine
+            const res = await fetch(`${redmineUrl}/users/current.json`, {
+                headers: { 'X-Redmine-API-Key': apiKey }
             });
 
+            if (!res.ok) throw new Error(`HTTP ${res.status} — Sai API Key hoặc Redmine URL`);
+
             const data = await res.json();
+            const userName = `${data.user.firstname} ${data.user.lastname}`.trim();
 
-            if (data.user) {
-                // Lưu vào chrome.storage
-                await chrome.storage.local.set({
-                    redmine_url: redmineUrl,
-                    api_key: apiKey,
-                    backend_url: backendUrl,
-                    user_id: data.user.id,
-                    user_name: data.user.display_name,
-                    redmine_user_id: data.user.redmine_user_id
-                });
-
-                showMessage(`✅ Đăng ký thành công! User: ${data.user.display_name}`, 'success');
-                setConnected(data.user.display_name, redmineUrl);
-            } else {
-                showMessage(`❌ Lỗi: ${data.error}`, 'error');
-            }
-        } catch (err) {
-            showMessage(`❌ Không thể đăng ký: ${err.message}`, 'error');
-        }
-    });
-
-    // Sync Config
-    elBtnSync.addEventListener('click', async () => {
-        const stored = await chrome.storage.local.get(['backend_url', 'user_id']);
-        if (!stored.backend_url || !stored.user_id) {
-            showMessage('Vui lòng đăng ký trước', 'error');
-            return;
-        }
-
-        showMessage('Đang sync config...', 'info');
-        elBtnSync.disabled = true;
-
-        try {
-            const res = await fetch(`${stored.backend_url}/api/config/sync`, {
-                headers: { 'X-User-Id': stored.user_id.toString() }
+            // Lưu vào chrome.storage.local
+            await chrome.storage.local.set({
+                redmine_url: redmineUrl,
+                api_key: apiKey,
+                user_name: userName
             });
-            const data = await res.json();
 
-            if (data.counts) {
-                showMessage(
-                    `✅ Đã sync: ${data.counts.trackers} trackers, ${data.counts.statuses} statuses, ` +
-                    `${data.counts.priorities} priorities, ${data.counts.users} users, ${data.counts.projects} projects`,
-                    'success'
-                );
-            } else {
-                showMessage(`❌ Lỗi: ${data.error}`, 'error');
-            }
+            showMessage(`✅ Đã lưu! Tooltip sẽ hoạt động ngay trên trang Redmine.`, 'success');
+            setConnected(userName, redmineUrl);
         } catch (err) {
-            showMessage(`❌ Sync thất bại: ${err.message}`, 'error');
+            showMessage(`❌ ${err.message}`, 'error');
         } finally {
-            elBtnSync.disabled = false;
+            elBtnSave.disabled = false;
         }
     });
 
-    // Helpers
+    // ====== Helpers ======
     function showMessage(text, type) {
         elMessage.textContent = text;
         elMessage.className = `message ${type}`;
+        elMessage.classList.remove('hidden');
     }
 
     function setConnected(name, url) {
@@ -151,6 +106,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         elUserInfo.classList.remove('hidden');
         elUserName.textContent = name;
         elServerUrl.textContent = url;
-        elBtnSync.disabled = false;
     }
 });
