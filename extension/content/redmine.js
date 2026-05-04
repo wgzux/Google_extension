@@ -44,7 +44,7 @@
         var currentUrl = window.location.origin;
 
         // Lưu URL
-        chrome.storage.local.get(['redmine_url', 'api_key'], function(stored) {
+        chrome.storage.local.get(['redmine_url', 'api_key'], function (stored) {
             var toSave = {};
             var shouldSave = false;
 
@@ -138,14 +138,6 @@
         console.log('[Redmine Helper] 🚀 Running modules...');
 
         // Khởi chạy các module tính năng
-        // if (typeof window.IssueTreeModule !== 'undefined') {
-        //     window.IssueTreeModule.init();
-        // }
-
-        // if (typeof window.BugManagerModule !== 'undefined') {
-        //     window.BugManagerModule.init();
-        // }
-
         if (typeof window.IssueTooltipModule !== 'undefined') {
             window.IssueTooltipModule.init();
         }
