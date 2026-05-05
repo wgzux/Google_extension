@@ -62,7 +62,7 @@ window.IssueTooltipModule = (function () {
             if (anchor.children('img, i').length > 0 && anchor.text().trim() === '') return;
 
             // Kiểm tra cấu hình có bật Tooltip không
-            chrome.storage.local.get({ isTooltipEnabled: true }, function (stored) {
+            chrome.storage.local.get({ isTooltipEnabled: true }, function(stored) {
                 if (stored.isTooltipEnabled === false) return;
 
                 clearTimeout(leaveTimer);
@@ -214,7 +214,7 @@ window.IssueTooltipModule = (function () {
         var hasPlan = hasExt && !!child.extension.plan_release;
         var hasActual = hasExt && !!(child.extension.release_date || child.extension.dev_date);
 
-        var displayTitle = child.tracker ? child.tracker.name : child.subject;
+        var displayTitle = child.category ? child.category.name : child.subject;
 
         // Tên phase — rowspan=3 để trải dài cả 3 dòng
         var nameHtml = '<td class="rh-td-phase" rowspan="3">'

@@ -185,6 +185,7 @@ class RedmineAPI {
             .map(child => ({
                 id: child.id,
                 subject: child.subject,
+                category: child.category || null,
                 tracker: child.tracker,
                 status: child.status,
                 start_date: child.start_date || null,
