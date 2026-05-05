@@ -62,7 +62,7 @@ window.IssueTooltipModule = (function () {
             if (anchor.children('img, i').length > 0 && anchor.text().trim() === '') return;
 
             // Kiểm tra cấu hình có bật Tooltip không
-            chrome.storage.local.get({ isTooltipEnabled: true }, function(stored) {
+            chrome.storage.local.get({ isTooltipEnabled: true }, function (stored) {
                 if (stored.isTooltipEnabled === false) return;
 
                 clearTimeout(leaveTimer);
@@ -182,16 +182,26 @@ window.IssueTooltipModule = (function () {
                 var L = buildChildCells(left);
                 var R = right ? buildChildCells(right) : null;
 
-                // Mỗi cặp sinh ra 3 hàng (Status / StartDate|Plan / EndDate|Actual)
-                // Cột tên phase dùng rowspan=3
-                html += '<tr>'
-                    + L.nameHtml + L.rows[0]
-                    + (R ? R.nameHtml + R.rows[0] : '<td colspan="3" class="rh-td-empty"></td>')
-                    + '</tr>';
-                html += '<tr>' + L.rows[1] + (R ? R.rows[1] : '') + '</tr>';
-                html += '<tr>' + L.rows[2] + (R ? R.rows[2] : '') + '</tr>';
+                // Một cặp sẽ hiển thị 5 dòng nếu CÓ ÍT NHẤT một bên là Bug, ngược lại chỉ hiện 3 dòng
+                var isBugPair = L.isBug || (R && R.isBug);
+                var rowCount = isBugPair ? 5 : 3;
 
-                // Đường kẻ phân cách giữa các cặp (không vẽ sau cặp cuối)
+                for (var r = 0; r < rowCount; r++) {
+                    var leftData  = L.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>';
+                    var rightData = R ? (R.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>') : '<td colspan="3" class="rh-td-empty"></td>';
+
+                    if (r === 0) {
+                        // Dòng đầu tiên: chứa ô tên/category với rowspan phủ toàn bộ cặp
+                        var leftName  = '<td class="rh-td-phase" rowspan="' + rowCount + '">' + L.nameContent + '</td>';
+                        var rightName = R ? '<td class="rh-td-phase" rowspan="' + rowCount + '">' + R.nameContent + '</td>' : '';
+                        
+                        html += '<tr>' + leftName + leftData + rightName + (R ? rightData : '') + '</tr>';
+                    } else {
+                        // Các dòng tiếp theo
+                        html += '<tr>' + leftData + (R ? rightData : '') + '</tr>';
+                    }
+                }
+
                 if (i + 2 < children.length) {
                     html += '<tr class="rh-row-sep"><td colspan="6"></td></tr>';
                 }
@@ -206,20 +216,33 @@ window.IssueTooltipModule = (function () {
     }
 
     /**
-     * Tạo HTML cells cho 1 child issue
-     * Trả về: { nameHtml, rows: [row1, row2, row3] }
+     * Tạo dữ liệu các dòng cho 1 child issue
+     * Trả về: { nameContent, rows: [...], isBug: boolean }
      */
     function buildChildCells(child) {
         var hasExt = !!(child.extension);
         var hasPlan = hasExt && !!child.extension.plan_release;
         var hasActual = hasExt && !!(child.extension.release_date || child.extension.dev_date);
 
-        var displayTitle = child.category ? child.category.name : child.subject;
+        // Kiểm tra chính xác tracker "bug testing"
+        var trackerName = (child.tracker && child.tracker.name) ? child.tracker.name.toLowerCase() : '';
+        var isBugTesting = (trackerName === 'bug testing' || trackerName === 'bug');
 
-        // Tên phase — rowspan=3 để trải dài cả 3 dòng
-        var nameHtml = '<td class="rh-td-phase" rowspan="3">'
-            + '<a class="rh-td-phase-link" href="/issues/' + child.id + '">' + escapeHtml(displayTitle) + '</a>'
-            + '</td>';
+        var displayTitle = child.category ? child.category.name : child.subject;
+        var nameContent = '<a class="rh-td-phase-link" href="/issues/' + child.id + '">' + escapeHtml(displayTitle) + '</a>';
+
+        // Hàm tiện ích: tìm giá trị custom field theo tên
+        function getCustomField(fieldName) {
+            if (!child.custom_fields || !child.custom_fields.length) return null;
+            var lowerName = fieldName.toLowerCase();
+            for (var i = 0; i < child.custom_fields.length; i++) {
+                var cf = child.custom_fields[i];
+                if (cf.name && cf.name.toLowerCase().indexOf(lowerName) !== -1) {
+                    return cf.value || null;
+                }
+            }
+            return null;
+        }
 
         // Row 1: Status
         var statusVal = escapeHtml(child.status ? child.status.name : '-');
@@ -255,7 +278,22 @@ window.IssueTooltipModule = (function () {
         }
         var row3 = '<td class="rh-td-label">' + label3 + '</td><td class="rh-td-value">' + val3 + '</td>';
 
-        return { nameHtml: nameHtml, rows: [row1, row2, row3] };
+        var rows = [row1, row2, row3];
+
+        // Nếu là Bug Testing, thêm 2 dòng dữ liệu. Nếu không, thêm 2 dòng trống để giữ alignment
+        if (isBugTesting) {
+            var bugType = escapeHtml(getCustomField('phân loại') || getCustomField('bug type') || getCustomField('classification') || '-');
+            var bugCause = escapeHtml(getCustomField('nguyên nhân') || getCustomField('cause') || getCustomField('root cause') || '-');
+
+            rows.push('<td class="rh-td-label">Phân loại</td><td class="rh-td-value">' + bugType + '</td>');
+            rows.push('<td class="rh-td-label">Nguyên nhân</td><td class="rh-td-value">' + bugCause + '</td>');
+        } else {
+            // Placeholder để tránh lệch cột khi bên kia là Bug
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
+        }
+
+        return { nameContent: nameContent, rows: rows, isBug: isBugTesting };
     }
 
     // ====== POSITIONING ======

@@ -137,7 +137,7 @@ class RedmineAPI {
 
     /** Danh sách subtasks của issue */
     async getChildren(parentId) {
-        const data = await this._fetch(`/issues.json?parent_id=${parentId}&status_id=*&limit=100`);
+        const data = await this._fetch(`/issues.json?parent_id=${parentId}&status_id=*&limit=100&include=custom_fields`);
         return data.issues;
     }
 
@@ -191,7 +191,8 @@ class RedmineAPI {
                 start_date: child.start_date || null,
                 due_date: child.due_date || null,
                 done_ratio: child.done_ratio || 0,
-                assigned_to: child.assigned_to || null
+                assigned_to: child.assigned_to || null,
+                custom_fields: child.custom_fields || []
             }))
             .sort((a, b) => (a.subject || '').localeCompare(b.subject || '', 'vi'));
 
