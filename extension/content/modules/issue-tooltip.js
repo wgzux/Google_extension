@@ -147,14 +147,27 @@ window.IssueTooltipModule = (function () {
         // Dòng 2: Subject: <nội dung>
         html += '<div class="rh-th-row"><span class="rh-th-label">Subject:</span> <span class="rh-th-value">' + escapeHtml(data.subject) + '</span></div>';
 
-        // Dòng 3: Root: X  Parent: Y  (hiện nếu có)
-        var hasRoot = data.root && data.root.id && data.root.id !== data.id;
+        // Dòng 3 & 4: Root & Parent (mỗi cái 1 dòng, kèm subject)
         var hasParent = data.parent && data.parent.id;
-        if (hasRoot || hasParent) {
-            html += '<div class="rh-th-row">';
-            if (hasRoot) html += '<span class="rh-th-label">Root:</span> <a class="rh-th-link" href="/issues/' + data.root.id + '">' + data.root.id + '</a>&nbsp;&nbsp;';
-            if (hasParent) html += '<span class="rh-th-label">Parent:</span> <a class="rh-th-link" href="/issues/' + data.parent.id + '">' + data.parent.id + '</a>';
-            html += '</div>';
+        var hasRoot = data.root && data.root.id && data.root.id !== data.id && (!hasParent || data.root.id !== data.parent.id);
+
+        if (hasRoot) {
+            var rootSubject = data.root.subject || '';
+            html += '<div class="rh-th-row">' +
+                '<span class="rh-th-label">Root:</span> ' +
+                '<a class="rh-th-link rh-truncate-single" href="/issues/' + data.root.id + '" title="' + escapeHtml(rootSubject) + '">' +
+                '#' + data.root.id + ' ' + escapeHtml(rootSubject) +
+                '</a>' +
+                '</div>';
+        }
+        if (hasParent) {
+            var parentSubject = data.parent.name || data.parent.subject || '';
+            html += '<div class="rh-th-row">' +
+                '<span class="rh-th-label">Parent:</span> ' +
+                '<a class="rh-th-link rh-truncate-single" href="/issues/' + data.parent.id + '" title="' + escapeHtml(parentSubject) + '">' +
+                '#' + data.parent.id + ' ' + escapeHtml(parentSubject) +
+                '</a>' +
+                '</div>';
         }
 
         // Dòng 4: Author: <tên>
@@ -182,19 +195,19 @@ window.IssueTooltipModule = (function () {
                 var L = buildChildCells(left);
                 var R = right ? buildChildCells(right) : null;
 
-                // Một cặp sẽ hiển thị 5 dòng nếu CÓ ÍT NHẤT một bên là Bug, ngược lại chỉ hiện 3 dòng
+                // Một cặp sẽ hiển thị 7 dòng nếu CÓ ÍT NHẤT một bên là Bug, ngược lại chỉ hiện 3 dòng
                 var isBugPair = L.isBug || (R && R.isBug);
-                var rowCount = isBugPair ? 5 : 3;
+                var rowCount = isBugPair ? 7 : 3;
 
                 for (var r = 0; r < rowCount; r++) {
-                    var leftData  = L.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>';
+                    var leftData = L.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>';
                     var rightData = R ? (R.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>') : '<td colspan="3" class="rh-td-empty"></td>';
 
                     if (r === 0) {
                         // Dòng đầu tiên: chứa ô tên/category với rowspan phủ toàn bộ cặp
-                        var leftName  = '<td class="rh-td-phase" rowspan="' + rowCount + '">' + L.nameContent + '</td>';
+                        var leftName = '<td class="rh-td-phase" rowspan="' + rowCount + '">' + L.nameContent + '</td>';
                         var rightName = R ? '<td class="rh-td-phase" rowspan="' + rowCount + '">' + R.nameContent + '</td>' : '';
-                        
+
                         html += '<tr>' + leftName + leftData + rightName + (R ? rightData : '') + '</tr>';
                     } else {
                         // Các dòng tiếp theo
@@ -280,15 +293,21 @@ window.IssueTooltipModule = (function () {
 
         var rows = [row1, row2, row3];
 
-        // Nếu là Bug Testing, thêm 2 dòng dữ liệu. Nếu không, thêm 2 dòng trống để giữ alignment
+        // Nếu là Bug Testing, thêm 4 dòng dữ liệu. Nếu không, thêm 4 dòng trống để giữ alignment
         if (isBugTesting) {
-            var bugType = escapeHtml(getCustomField('phân loại') || getCustomField('bug type') || getCustomField('classification') || '-');
-            var bugCause = escapeHtml(getCustomField('nguyên nhân') || getCustomField('cause') || getCustomField('root cause') || '-');
+            var bugType = escapeHtml(getCustomField('phân loại lỗi') || (child.category ? child.category.name : '-'));
+            var bugRoot = escapeHtml(getCustomField('nguyên nhân gốc') || '-');
+            var bugDirect = escapeHtml(getCustomField('nguyên nhân trực tiếp') || '-');
+            var bugScope = escapeHtml(getCustomField('phạm vi ảnh hưởng') || '-');
 
-            rows.push('<td class="rh-td-label">Phân loại</td><td class="rh-td-value">' + bugType + '</td>');
-            rows.push('<td class="rh-td-label">Nguyên nhân</td><td class="rh-td-value">' + bugCause + '</td>');
+            rows.push('<td class="rh-td-label">Type of bug</td><td class="rh-td-value">' + bugType + '</td>');
+            rows.push('<td class="rh-td-label">Root cause</td><td class="rh-td-value">' + bugRoot + '</td>');
+            rows.push('<td class="rh-td-label">Direct cause</td><td class="rh-td-value"><div class="rh-truncate">' + bugDirect + '</div></td>');
+            rows.push('<td class="rh-td-label">Impact scope</td><td class="rh-td-value"><div class="rh-truncate">' + bugScope + '</div></td>');
         } else {
             // Placeholder để tránh lệch cột khi bên kia là Bug
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
             rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
             rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
         }

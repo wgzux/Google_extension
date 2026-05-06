@@ -399,3 +399,25 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Cắt ngắn văn bản dài (Truncate text) */
+.rh-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Số dòng tối đa */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    line-height: 1.4;
+    max-width: 180px; /* Đảm bảo không đẩy cột quá rộng */
+    color: #555;
+}
+
+/* Cắt ngắn trên 1 dòng */
+.rh-truncate-single {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 350px;
+    vertical-align: middle;
+}

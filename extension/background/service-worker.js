@@ -171,14 +171,28 @@ class RedmineAPI {
         // 1. Lấy issue detail (bao gồm watchers)
         const issue = await this.getIssue(issueId);
 
-        // 2. Lấy children (subtasks) — chạy song song với getRootIssue
-        const [children, root] = await Promise.allSettled([
+        // 2. Lấy children (subtasks) & root & parent detail (để lấy subject)
+        var parentPromise = (issue.parent && issue.parent.id) 
+            ? this._fetch(`/issues/${issue.parent.id}.json`) 
+            : Promise.resolve(null);
+
+        const [children, root, parentData] = await Promise.allSettled([
             this.getChildren(issueId),
-            this.getRootIssue(issueId)
+            this.getRootIssue(issueId),
+            parentPromise
         ]);
 
         const childList = children.status === 'fulfilled' ? children.value : [];
         const rootIssue = root.status === 'fulfilled' ? root.value : null;
+        const parentDetail = (parentData.status === 'fulfilled' && parentData.value) ? (parentData.value.issue || parentData.value) : null;
+        
+        var parentFormatted = null;
+        if (issue.parent) {
+            parentFormatted = {
+                id: issue.parent.id,
+                name: parentDetail ? parentDetail.subject : issue.parent.name
+            };
+        }
 
         // 3. Format và sắp xếp children
         const formattedChildren = childList
@@ -202,7 +216,7 @@ class RedmineAPI {
             status: issue.status,
             subject: issue.subject,
             root: rootIssue,
-            parent: issue.parent || null,
+            parent: parentFormatted,
             author: issue.author || null,
             watchers: issue.watchers || [],
             assigned_to: issue.assigned_to || null,
