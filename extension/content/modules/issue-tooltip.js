@@ -188,35 +188,49 @@ window.IssueTooltipModule = (function () {
             html += '<div class="rh-tooltip-body"><table class="rh-tooltip-table"><tbody>';
 
             var children = data.children;
-            for (var i = 0; i < children.length; i += 2) {
-                var left = children[i];
-                var right = children[i + 1] || null;
-
-                var L = buildChildCells(left);
-                var R = right ? buildChildCells(right) : null;
-
-                // Một cặp sẽ hiển thị 7 dòng nếu CÓ ÍT NHẤT một bên là Bug, ngược lại chỉ hiện 3 dòng
-                var isBugPair = L.isBug || (R && R.isBug);
-                var rowCount = isBugPair ? 7 : 3;
+            if (children.length === 1) {
+                // TRƯỜNG HỢP CHỈ CÓ 1 SUBTASK: Fill full width
+                var L = buildChildCells(children[0], true);
+                var rowCount = L.isBug ? 7 : 3;
+                var nameRowspan = L.isBug ? 5 : 3;
 
                 for (var r = 0; r < rowCount; r++) {
-                    var leftData = L.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>';
-                    var rightData = R ? (R.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>') : '<td colspan="3" class="rh-td-empty"></td>';
-
+                    var leftData = L.rows[r];
                     if (r === 0) {
-                        // Dòng đầu tiên: chứa ô tên/category với rowspan phủ toàn bộ cặp
-                        var leftName = '<td class="rh-td-phase" rowspan="' + rowCount + '">' + L.nameContent + '</td>';
-                        var rightName = R ? '<td class="rh-td-phase" rowspan="' + rowCount + '">' + R.nameContent + '</td>' : '';
-
-                        html += '<tr>' + leftName + leftData + rightName + (R ? rightData : '') + '</tr>';
+                        html += '<tr><td class="rh-td-phase" rowspan="' + nameRowspan + '">' + L.nameContent + '</td>' + leftData + '</tr>';
                     } else {
-                        // Các dòng tiếp theo
-                        html += '<tr>' + leftData + (R ? rightData : '') + '</tr>';
+                        html += '<tr>' + leftData + '</tr>';
                     }
                 }
+            } else {
+                // TRƯỜNG HỢP NHIỀU SUBTASK: Chia 2 cột (paired)
+                for (var i = 0; i < children.length; i += 2) {
+                    var left = children[i];
+                    var right = children[i + 1] || null;
 
-                if (i + 2 < children.length) {
-                    html += '<tr class="rh-row-sep"><td colspan="6"></td></tr>';
+                    var L = buildChildCells(left, false);
+                    var R = right ? buildChildCells(right, false) : null;
+
+                    var isBugPair = L.isBug || (R && R.isBug);
+                    var rowCount = isBugPair ? 7 : 3;
+                    var nameRowspan = isBugPair ? 5 : 3;
+
+                    for (var r = 0; r < rowCount; r++) {
+                        var leftData = L.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>';
+                        var rightData = R ? (R.rows[r] || '<td class="rh-td-label"></td><td class="rh-td-value"></td>') : '<td colspan="3" class="rh-td-empty"></td>';
+
+                        if (r === 0) {
+                            var leftName = '<td class="rh-td-phase" rowspan="' + nameRowspan + '">' + L.nameContent + '</td>';
+                            var rightName = R ? '<td class="rh-td-phase" rowspan="' + nameRowspan + '">' + R.nameContent + '</td>' : '';
+                            html += '<tr>' + leftName + leftData + rightName + (R ? rightData : '') + '</tr>';
+                        } else {
+                            html += '<tr>' + leftData + rightData + '</tr>';
+                        }
+                    }
+
+                    if (i + 2 < children.length) {
+                        html += '<tr class="rh-row-sep"><td colspan="6"></td></tr>';
+                    }
                 }
             }
 
@@ -232,7 +246,8 @@ window.IssueTooltipModule = (function () {
      * Tạo dữ liệu các dòng cho 1 child issue
      * Trả về: { nameContent, rows: [...], isBug: boolean }
      */
-    function buildChildCells(child) {
+    function buildChildCells(child, isSingle) {
+        var vCol = isSingle ? ' colspan="4"' : '';
         var hasExt = !!(child.extension);
         var hasPlan = hasExt && !!child.extension.plan_release;
         var hasActual = hasExt && !!(child.extension.release_date || child.extension.dev_date);
@@ -242,7 +257,10 @@ window.IssueTooltipModule = (function () {
         var isBugTesting = (trackerName === 'bug testing' || trackerName === 'bug');
 
         var displayTitle = child.category ? child.category.name : child.subject;
-        var nameContent = '<a class="rh-td-phase-link" href="/issues/' + child.id + '">' + escapeHtml(displayTitle) + '</a>';
+        var assigneeName = (child.assigned_to && child.assigned_to.name) ? child.assigned_to.name : '-';
+
+        var nameContent = '<a class="rh-td-phase-link" href="/issues/' + child.id + '">' + escapeHtml(displayTitle) + '</a>' +
+                         '<div class="rh-td-assignee">Assignee: ' + escapeHtml(assigneeName) + '</div>';
 
         // Hàm tiện ích: tìm giá trị custom field theo tên
         function getCustomField(fieldName) {
@@ -259,7 +277,7 @@ window.IssueTooltipModule = (function () {
 
         // Row 1: Status
         var statusVal = escapeHtml(child.status ? child.status.name : '-');
-        var row1 = '<td class="rh-td-label">Status</td><td class="rh-td-value">' + statusVal + '</td>';
+        var row1 = '<td class="rh-td-label">Status</td><td class="rh-td-value"' + vCol + '>' + statusVal + '</td>';
 
         // Row 2: Start Date hoặc Plan
         var label2, val2;
@@ -270,7 +288,7 @@ window.IssueTooltipModule = (function () {
             label2 = 'Start Date';
             val2 = formatDateWithDay(child.start_date);
         }
-        var row2 = '<td class="rh-td-label">' + label2 + '</td><td class="rh-td-value">' + val2 + '</td>';
+        var row2 = '<td class="rh-td-label">' + label2 + '</td><td class="rh-td-value"' + vCol + '>' + val2 + '</td>';
 
         // Row 3: End Date hoặc Actual
         var label3, val3;
@@ -289,7 +307,7 @@ window.IssueTooltipModule = (function () {
                 ? '<span class="rh-date-late">' + endStr + '</span>'
                 : endStr;
         }
-        var row3 = '<td class="rh-td-label">' + label3 + '</td><td class="rh-td-value">' + val3 + '</td>';
+        var row3 = '<td class="rh-td-label">' + label3 + '</td><td class="rh-td-value"' + vCol + '>' + val3 + '</td>';
 
         var rows = [row1, row2, row3];
 
@@ -300,16 +318,22 @@ window.IssueTooltipModule = (function () {
             var bugDirect = escapeHtml(getCustomField('nguyên nhân trực tiếp') || '-');
             var bugScope = escapeHtml(getCustomField('phạm vi ảnh hưởng') || '-');
 
-            rows.push('<td class="rh-td-label">Type of bug</td><td class="rh-td-value">' + bugType + '</td>');
-            rows.push('<td class="rh-td-label">Root cause</td><td class="rh-td-value">' + bugRoot + '</td>');
-            rows.push('<td class="rh-td-label">Direct cause</td><td class="rh-td-value"><div class="rh-truncate">' + bugDirect + '</div></td>');
-            rows.push('<td class="rh-td-label">Impact scope</td><td class="rh-td-value"><div class="rh-truncate">' + bugScope + '</div></td>');
-        } else {
-            // Placeholder để tránh lệch cột khi bên kia là Bug
+            rows.push('<td class="rh-td-label">Type of bug</td><td class="rh-td-value"' + vCol + '>' + bugType + '</td>');
+            rows.push('<td class="rh-td-label">Root cause</td><td class="rh-td-value"' + vCol + '>' + bugRoot + '</td>');
+            if (isSingle) {
+                // Label (1) + Value (5) = 6 columns
+                rows.push('<td class="rh-td-label">Direct cause</td><td class="rh-td-value" colspan="5"><div class="rh-truncate">' + bugDirect + '</div></td>');
+                rows.push('<td class="rh-td-label" colspan="1">Impact scope</td><td class="rh-td-value" colspan="5"><div class="rh-truncate">' + bugScope + '</div></td>');
+            } else {
+                rows.push('<td class="rh-td-label">Direct cause</td><td class="rh-td-value" colspan="2"><div class="rh-truncate">' + bugDirect + '</div></td>');
+                rows.push('<td class="rh-td-label">Impact scope</td><td class="rh-td-value" colspan="2"><div class="rh-truncate">' + bugScope + '</div></td>');
+            }
+        } else if (!isSingle) {
+            // Placeholder chỉ cần cho paired
             rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
             rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
-            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
-            rows.push('<td class="rh-td-label"></td><td class="rh-td-value"></td>');
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value" colspan="2"></td>');
+            rows.push('<td class="rh-td-label"></td><td class="rh-td-value" colspan="2"></td>');
         }
 
         return { nameContent: nameContent, rows: rows, isBug: isBugTesting };

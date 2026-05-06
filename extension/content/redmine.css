@@ -1,20 +1,25 @@
-/* ====================================
-   Redmine Helper - Content Script CSS
-   ==================================== */
 
-/* ====== ISSUE TREE MODULE ====== */
+/* ====== TREE MODULE ====== */
+.rh-tree-row {
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.rh-tree-indent {
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+}
 
 .rh-tree-toggle {
-    display: inline-block;
     cursor: pointer;
-    font-size: 12px;
-    margin-right: 4px;
-    color: #444;
-    user-select: none;
     width: 16px;
     text-align: center;
-    transition: color 0.2s;
-    font-weight: bold;
+    margin-right: 4px;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
 }
 
 .rh-tree-toggle:hover {
@@ -32,8 +37,7 @@
     gap: 6px;
 }
 
-/* ====== CHUNG: BUTTONS ====== */
-
+/* ====== COMMON: BUTTONS ====== */
 .rh-btn {
     display: inline-flex;
     align-items: center;
@@ -61,8 +65,6 @@
 }
 
 /* ====== BUG MANAGER MODULE ====== */
-
-/* Bug highlight colors - ĐẬM HƠN để dễ phân biệt */
 .rh-is-bug {
     font-weight: 600;
 }
@@ -178,7 +180,6 @@
 }
 
 /* ====== SPENT TIME MODULE ====== */
-
 .rh-hours-none {
     background-color: #ffcdd2 !important;
 }
@@ -192,7 +193,6 @@
 }
 
 /* ====== REPORT CONTROLS ====== */
-
 .rh-report-controls {
     margin-bottom: 10px;
     display: flex;
@@ -204,7 +204,6 @@
 }
 
 /* ====== TOAST NOTIFICATION ====== */
-
 .rh-toast {
     position: fixed;
     bottom: 24px;
@@ -236,7 +235,6 @@
 }
 
 /* ====== ISSUE TOOLTIP MODULE ====== */
-
 .rh-tooltip {
     position: absolute;
     z-index: 100000;
@@ -263,7 +261,7 @@
     transform: translateY(0);
 }
 
-/* ── HEADER ── */
+/* HEADER */
 .rh-tooltip-header {
     padding: 8px 12px;
     border-bottom: 2px solid #222;
@@ -271,36 +269,41 @@
     border-radius: 4px 4px 0 0;
 }
 
-/* Dòng 1: "ID: 95574 - Task - Resolved" — in đậm */
 .rh-th-title {
     font-weight: bold;
     font-size: 13px;
     margin-bottom: 2px;
 }
 
-/* Dòng 2–5 — label in đậm, value bình thường */
 .rh-th-row {
     font-size: 13px;
     line-height: 1.6;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
 }
 
 .rh-th-label {
     font-weight: bold;
+    white-space: nowrap;
 }
 
 .rh-th-value {
     font-weight: normal;
+    flex: 1;
+    min-width: 0;
 }
 
 .rh-th-link {
     color: #1557a1;
     text-decoration: none;
+    white-space: nowrap;
 }
 .rh-th-link:hover {
     text-decoration: underline;
 }
 
-/* ── BODY (bảng 2 cột) ── */
+/* BODY (2-column table) */
 .rh-tooltip-body {
     max-height: 350px;
     overflow-y: auto;
@@ -312,7 +315,6 @@
     table-layout: fixed;
 }
 
-/* Cột tên phase: ~22% mỗi bên */
 .rh-tooltip-table .rh-td-phase {
     width: 22%;
     font-weight: bold;
@@ -325,15 +327,20 @@
 }
 
 .rh-td-phase-link {
-    color: #222;
+    color: #1557a1;
     text-decoration: none;
 }
 .rh-td-phase-link:hover {
-    color: #1557a1;
     text-decoration: underline;
 }
 
-/* Cột label: Status / Start Date / End Date — 12% mỗi bên */
+.rh-td-assignee {
+    color: #1557a1;
+    margin-top: 4px;
+    font-size: 12px;
+    word-break: break-word;
+}
+
 .rh-tooltip-table .rh-td-label {
     width: 12%;
     font-size: 12px;
@@ -344,7 +351,6 @@
     white-space: nowrap;
 }
 
-/* Cột giá trị — 16% mỗi bên */
 .rh-tooltip-table .rh-td-value {
     width: 16%;
     font-size: 12px;
@@ -353,12 +359,10 @@
     vertical-align: middle;
 }
 
-/* Ô trống khi số lẻ */
 .rh-tooltip-table .rh-td-empty {
     background: #fafafa;
 }
 
-/* Hàng phân cách giữa các cặp issue */
 .rh-tooltip-table .rh-row-sep td {
     height: 4px;
     background: #e8e8e8;
@@ -366,13 +370,11 @@
     padding: 0;
 }
 
-/* Ngày trễ hạn — đỏ */
 .rh-date-late {
     color: #e74c3c;
     font-weight: bold;
 }
 
-/* Không có subtask */
 .rh-tooltip-empty {
     padding: 16px;
     text-align: center;
@@ -399,25 +401,39 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Cắt ngắn văn bản dài (Truncate text) */
+/* Truncate text */
 .rh-truncate {
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Số dòng tối đa */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
-    max-width: 180px; /* Đảm bảo không đẩy cột quá rộng */
-    color: #555;
+    max-width: 100%;
 }
 
-/* Cắt ngắn trên 1 dòng */
+/* Single line truncation */
 .rh-truncate-single {
     display: inline-block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 350px;
+    flex: 1;
+    min-width: 0;
     vertical-align: middle;
+}
+
+/* Full width for Bug details */
+.rh-td-value-full {
+    padding: 5px 6px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    vertical-align: top;
+}
+
+.rh-td-label-inline {
+    font-weight: bold;
+    color: #444;
+    margin-right: 6px;
 }
