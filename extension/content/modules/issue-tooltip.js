@@ -114,7 +114,7 @@ window.IssueTooltipModule = (function () {
         }).catch(function (err) {
             if (!activeAnchor || activeAnchor[0] !== anchor[0]) return;
             console.error('[IssueTooltip] Error loading data:', err);
-            currentTooltip.html('<div style="padding: 15px; color: #e74c3c;">⚠️ Lỗi tải dữ liệu.</div>');
+            currentTooltip.html('<div style="padding: 15px; color: #e74c3c;">Vui lòng tải lại trang.</div>');
         });
     }
 
@@ -260,7 +260,7 @@ window.IssueTooltipModule = (function () {
         var assigneeName = (child.assigned_to && child.assigned_to.name) ? child.assigned_to.name : '-';
 
         var nameContent = '<a class="rh-td-phase-link" href="/issues/' + child.id + '">' + escapeHtml(displayTitle) + '</a>' +
-                         '<div class="rh-td-assignee">Assignee: ' + escapeHtml(assigneeName) + '</div>';
+            '<div class="rh-td-assignee">Assignee: ' + escapeHtml(assigneeName) + '</div>';
 
         // Hàm tiện ích: tìm giá trị custom field theo tên
         function getCustomField(fieldName) {
